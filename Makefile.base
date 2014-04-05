@@ -1,0 +1,30 @@
+NAME=binary_heap
+OBJDIR=.o
+
+TARGET_OBJECTS=				\
+    $(OBJDIR)/heap.o 			\
+
+$(OBJDIR)/%.o: %.c
+	@echo $(CC) $(EXTRA_CFLAGS) $(CFLAGS) -c -o $@ $<
+	@$(CC) $(EXTRA_CFLAGS) $(CFLAGS) -c -o $@ $<
+
+#
+# link
+#
+TARGET=$(NAME)$(EXE)
+$(TARGET): $(TARGET_OBJECTS)
+	$(CC) $(TARGET_OBJECTS) $(LDLIBS) -o $(TARGET)
+
+#
+# To force clean and avoid "up to date" warning.
+#
+.PHONY: clean
+.PHONY: clobber
+
+clean:
+	rm -rf $(TARGET) $(OBJDIR)
+
+clobber: clean
+	mkdir -p $(OBJDIR)
+
+all: $(TARGET) 
