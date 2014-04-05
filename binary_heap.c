@@ -94,6 +94,9 @@
 #include <assert.h>
 #include "binary_heap.h"
 
+/*
+ * Allocate contiguous heap memory for all elements.
+ */
 bheap *bheap_malloc (const bheap_idx max_size,
                      bheap_less_than_func less_than,
                      bheap_print_func printer)
@@ -112,12 +115,18 @@ bheap *bheap_malloc (const bheap_idx max_size,
     return (h);
 }
 
+/*
+ * Destroy the contiguous heap memory.
+ */
 void bheap_free (bheap *h)
 {
     free(h->data);
     free(h);
 }
 
+/*
+ * Insert a new element in to the heap and sort it.
+ */
 unsigned int bheap_insert (bheap *h, const bheap_data *insert_data)
 {
     /*
@@ -126,7 +135,8 @@ unsigned int bheap_insert (bheap *h, const bheap_data *insert_data)
     if (h->in_use == h->max_size) {
         h->max_size += (h->max_size + 1) / 2;
 
-        bheap_data *new_data = realloc(h->data, sizeof(bheap_data) * h->max_size);
+        bheap_data *new_data = 
+                        realloc(h->data, sizeof(bheap_data) * h->max_size);
         if (!new_data) {
             return (0);
         }
@@ -188,6 +198,9 @@ unsigned int bheap_insert (bheap *h, const bheap_data *insert_data)
     return (1);
 }
 
+/*
+ * Pop the head of the heap and resort.
+ */
 bheap_data bheap_pop (bheap *h)
 {
     assert(!bheap_empty(h));
