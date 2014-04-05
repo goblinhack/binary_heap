@@ -2,6 +2,7 @@ NAME=binary_heap
 OBJDIR=.o
 
 TARGET_OBJECTS=					\
+    $(OBJDIR)/main.o 				\
     $(OBJDIR)/binary_heap.o 			\
 
 $(OBJDIR)/%.o: %.c

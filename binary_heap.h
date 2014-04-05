@@ -41,3 +41,15 @@ typedef struct heap_ {
      */
     heap_idx in_use;
 } heap;
+
+heap *heap_malloc(const heap_idx max_size,
+                  heap_less_than_func less_than,
+                  heap_print_func printer);
+void heap_free(heap *h);
+unsigned int heap_insert(heap *h, const heap_data *insert_data);
+heap_data heap_pop(heap *h);
+
+static inline unsigned int heap_empty (heap *h)
+{
+    return (!h->in_use);
+}
