@@ -9,9 +9,6 @@ key out of the tree. We don't care if the whole tree is sorted; the rest of
 the list can be a jumble as long as when we pull items off the list they are
 sorted.
 
-
-In a sorted list, every item on the list is in its proper order, lowest-to-highest or highest-to-lowest. This is helpful, but is actually more than we really need. We don’t actually care if item number 127 is lower than number 128 on the list. All we really want is the lowest F cost item to be easily accessible at the top of the list. The rest of the list can be a jumble, for all we care. Keeping the rest of the list properly sorted is just extra unneeded work until, of course, we need the next lowest F cost item.
-
 A binary heap is bunch of items where either the lowest or highest value item is at 
 the top of the heap. In this demo, I use the lowest value ordering. Each element in
 the heap has two children and it must have a value lower than those two children.
