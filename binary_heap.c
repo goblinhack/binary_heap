@@ -94,16 +94,16 @@
 #include <assert.h>
 #include "binary_heap.h"
 
-heap *heap_malloc (const heap_idx max_size,
-                   heap_less_than_func less_than,
-                   heap_print_func printer)
+bheap *bheap_malloc (const bheap_idx max_size,
+                     bheap_less_than_func less_than,
+                     bheap_print_func printer)
 {
-    heap *h = malloc(sizeof(*h));
+    bheap *h = malloc(sizeof(*h));
     if (!h) {
         return (0);
     }
 
-    h->data = malloc(sizeof(heap_data) * max_size);
+    h->data = malloc(sizeof(bheap_data) * max_size);
     h->max_size = max_size;
     h->in_use = 0;
     h->less_than = less_than;
@@ -112,21 +112,21 @@ heap *heap_malloc (const heap_idx max_size,
     return (h);
 }
 
-void heap_free (heap *h)
+void bheap_free (bheap *h)
 {
     free(h->data);
     free(h);
 }
 
-unsigned int heap_insert (heap *h, const heap_data *insert_data)
+unsigned int bheap_insert (bheap *h, const bheap_data *insert_data)
 {
     /*
-     * Resize the heap if needed.
+     * Resize the bheap if needed.
      */
     if (h->in_use == h->max_size) {
         h->max_size += (h->max_size + 1) / 2;
 
-        heap_data *new_data = realloc(h->data, sizeof(heap_data) * h->max_size);
+        bheap_data *new_data = realloc(h->data, sizeof(bheap_data) * h->max_size);
         if (!new_data) {
             return (0);
         }
@@ -134,17 +134,17 @@ unsigned int heap_insert (heap *h, const heap_data *insert_data)
         h->data = new_data;
     }
 
-    heap_idx idx = h->in_use++;
-    heap_data *current = &h->data[idx];
+    bheap_idx idx = h->in_use++;
+    bheap_data *current = &h->data[idx];
 
     /*
      * Insert the new element. If there are existing elements, we need to
-     * walk backwards from the end of the heap, swapping elements as we
-     * go until the heap is reordered.
+     * walk backwards from the end of the bheap, swapping elements as we
+     * go until the bheap is reordered.
      */
     if (idx) {
-        heap_idx parent_idx;
-        heap_data *parent;
+        bheap_idx parent_idx;
+        bheap_data *parent;
 
         /*
          * Get the parent idx, which is half the current idx.
@@ -152,7 +152,7 @@ unsigned int heap_insert (heap *h, const heap_data *insert_data)
         parent_idx = (idx - 1) / 2;
         parent = &h->data[parent_idx];
 
-        heap_less_than_func less_than = h->less_than;
+        bheap_less_than_func less_than = h->less_than;
         do {
             /*
              * If the parent is less than the current value, then we are 
@@ -188,32 +188,32 @@ unsigned int heap_insert (heap *h, const heap_data *insert_data)
     return (1);
 }
 
-heap_data heap_pop (heap *h)
+bheap_data bheap_pop (bheap *h)
 {
-    assert(!heap_empty(h));
+    assert(!bheap_empty(h));
 
     /*
      * The head element is what we will return.
      */
-    heap_data head = h->data[0];
+    bheap_data head = h->data[0];
 
     /*
      * First, we remove the item in slot #1, which is now empty. Then we take 
-     * the last item in the heap, and move it up to slot #1.
+     * the last item in the bheap, and move it up to slot #1.
      */
-    heap_data temp = h->data[--h->in_use];
+    bheap_data temp = h->data[--h->in_use];
     if (!h->in_use) {
         return (head);
     }
 
-    heap_less_than_func less_than = h->less_than;
+    bheap_less_than_func less_than = h->less_than;
     
-    heap_idx idx = 0;
+    bheap_idx idx = 0;
 
     for (;;) {
-        heap_idx lowest_child_idx;
-        heap_idx other_child_idx;
-        heap_idx child_idx;
+        bheap_idx lowest_child_idx;
+        bheap_idx other_child_idx;
+        bheap_idx child_idx;
 
         /*
          * Next we compare the item to each of its two children, which are at 
@@ -225,21 +225,21 @@ heap_data heap_pop (heap *h)
         child_idx = (idx * 2) + 1;
         if (child_idx >= h->in_use) {
             /*
-             * If we are past the end of the heap then it is ordered again.
+             * If we are past the end of the bheap then it is ordered again.
              */
             break;
         }
 
         other_child_idx = child_idx + 1;
 
-        const heap_data *child = &h->data[child_idx];
-        const heap_data *lowest_child;
+        const bheap_data *child = &h->data[child_idx];
+        const bheap_data *lowest_child;
 
         /*
          * Find the lowest of the two children if there are two children.
          */
         if (other_child_idx < h->in_use) {
-            const heap_data *other_child = &h->data[other_child_idx];
+            const bheap_data *other_child = &h->data[other_child_idx];
 
             if ((less_than)(child, other_child)) {
                 lowest_child = child;

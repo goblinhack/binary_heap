@@ -29,3 +29,6 @@ clobber: clean
 	mkdir -p $(OBJDIR)
 
 all: $(TARGET) 
+
+binary_heap.o: /usr/include/assert.h binary_heap.h
+main.o: /usr/include/assert.h binary_heap.h
