@@ -46,7 +46,7 @@ it, in sort order.
 The example code, heap.c and binary, binary_heap should produce results like the 
 following when ran.
 
-<ore>
+<pre>
 inserted 7  (1  in use):7  
 inserted 49 (2  in use):7  49 
 inserted 73 (3  in use):7  49 73 
@@ -87,7 +87,7 @@ popped   73 (3  in use):78 87 92
 popped   78 (2  in use):87 92 
 popped   87 (1  in use):92 
 popped   92 (0  in use):
-</ore>
+</pre>
 
 Plese let me know if this is useful to anyone. I wrote this as examples I found did
 not quite work, and/or had no demo of it working.
