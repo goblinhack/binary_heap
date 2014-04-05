@@ -18,18 +18,20 @@ the heap has two children and it must have a value lower than those two children
 
 e.g. this linear array (the heap):
 
+<pre>
     3  7 42 9 12 65 44
+</pre>
 
 can be viewed as a tree
 
-<code>
+<pre>
                                 ___ 3 ___
                                /         \
                               7           42 
                             /  \         /  \
                            9   12       65   44
 
-</code>
+</pre>
 
 When insterting elements, we add them to the end of the array and then compare
 with the parent node ((index - 1) / 2) and swap if the parent is lower.
