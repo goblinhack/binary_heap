@@ -7,6 +7,7 @@
 #include <assert.h>
 #include "binary_heap.h"
 
+#ifdef BHEAP_PRINT_RESULTS
 /*
  * Print a heap element.
  */
@@ -24,15 +25,7 @@ static void bheap_test_print (bheap *h)
 
     printf("\n");
 }
-
-/*
- * Compare two keys for equality.
- */
-static unsigned int bheap_compare_sort_keys (const bheap_data *a, 
-                                             const bheap_data *b)
-{
-    return (a->sort_key <= b->sort_key);
-}
+#endif
 
 /*
  * Print the contents of the key for debugging.
@@ -59,16 +52,17 @@ static bheap *bheap_test_fill (bheap *h, bheap_idx nelements)
 
         data.sort_key = rand() % 100;
         data.user_data = bheap_test_user_data + data.sort_key;
-        data.user_junk = bheap_test_user_data;
 
         h = bheap_insert(h, &data);
 
+#ifdef BHEAP_PRINT_RESULTS
         /*
          * Print the bheap.
          */
         printf("inserted ");
         bheap_print_sort_key(&data);
         bheap_test_print(h);
+#endif
     }
 
     return (h);
@@ -85,19 +79,20 @@ static void bheap_test_empty (bheap *h)
     while (!bheap_empty(h)) {
         data = bheap_pop(h);
 
+#ifdef BHEAP_PRINT_RESULTS
         /*
          * Print the bheap.
          */
         printf("popped   ");
         bheap_print_sort_key(&data);
         bheap_test_print(h);
+#endif
 
         /*
          * Check what we popped is sorted and matches our user data.
          */
         assert(data.sort_key >= last_value);
         assert(data.user_data == bheap_test_user_data + data.sort_key);
-        assert(data.user_junk == bheap_test_user_data);
         last_value = data.sort_key;
     }
 }
@@ -107,7 +102,6 @@ int main (int argc, char *argv[])
     bheap *h;
 
     h = bheap_malloc(10 /* elements */, 
-                    bheap_compare_sort_keys, 
                     bheap_print_sort_key);
 
     h = bheap_test_fill(h, 20);

@@ -105,8 +105,11 @@ popped   92 (0  in use):
                      ((size_t) ( (char *)&((st *)0)->m - (char *)0 ))
 #endif
 
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
+
 /*
- * How much contiguous memory to hold the heap struct and data elems.
+ * How much contiguous memory to hold the heap struct and data elems?
  */
 static size_t bheap_size (const bheap_idx max_size)
 {
@@ -124,7 +127,6 @@ static size_t bheap_size (const bheap_idx max_size)
  * Allocate contiguous heap memory for all elements.
  */
 bheap *bheap_malloc (const bheap_idx max_size,
-                     bheap_less_than_func less_than,
                      bheap_print_func printer)
 {
     bheap *h = malloc(bheap_size(max_size));
@@ -134,8 +136,9 @@ bheap *bheap_malloc (const bheap_idx max_size,
 
     h->max_size = max_size;
     h->in_use = 0;
-    h->less_than = less_than;
+#ifdef BHEAP_INCLUDE_PRINTER
     h->printer = printer;
+#endif
 
     return (h);
 }
@@ -149,6 +152,17 @@ void bheap_free (bheap *h)
 }
 
 /*
+ * Compare two keys for equality. By having the compare function local it is
+ * less flexible but now we can inline the check. Most of the time is spent
+ * in doing key compares so this has to be fast!
+ */
+static unsigned char inline bheap_compare_sort_keys (const bheap_data *a,
+                                                     const bheap_data *b)
+{
+    return (a->sort_key <= b->sort_key);
+}
+
+/*
  * Insert a new element in to the heap and sort it.
  */
 bheap *bheap_insert (bheap *h, const bheap_data *insert_data)
@@ -157,7 +171,7 @@ bheap *bheap_insert (bheap *h, const bheap_data *insert_data)
      * Resize the bheap if needed.
      */
     if (h->in_use == h->max_size) {
-        h->max_size += (h->max_size + 1) / 2;
+        h->max_size += (h->max_size + 1) >> 1;
 
         h = realloc(h, bheap_size(h->max_size));
         if (!h) {
@@ -166,7 +180,8 @@ bheap *bheap_insert (bheap *h, const bheap_data *insert_data)
     }
 
     bheap_idx idx = h->in_use++;
-    bheap_data *current = &h->data[idx];
+    bheap_data *heap_data = h->data;
+    bheap_data *current = &heap_data[idx];
 
     /*
      * Insert the new element. If there are existing elements, we need to
@@ -180,16 +195,15 @@ bheap *bheap_insert (bheap *h, const bheap_data *insert_data)
         /*
          * Get the parent idx, which is half the current idx.
          */
-        parent_idx = (idx - 1) / 2;
-        parent = &h->data[parent_idx];
+        parent_idx = (idx - 1) >> 1;
+        parent = &heap_data[parent_idx];
 
-        bheap_less_than_func less_than = h->less_than;
         do {
             /*
              * If the parent is less than the current value, then we are 
              * ordered.
              */
-            if ((less_than)(parent, insert_data)) {
+            if (bheap_compare_sort_keys(parent, insert_data)) {
                 break;
             }
 
@@ -203,13 +217,13 @@ bheap *bheap_insert (bheap *h, const bheap_data *insert_data)
              * Parent is now the current idx.
              */
             idx = parent_idx;
-            current = &h->data[idx];
+            current = &heap_data[idx];
 
             /*
              * Get the parent idx, which is half the current idx.
              */
-            parent_idx = (idx - 1) / 2;
-            parent = &h->data[parent_idx];
+            parent_idx = (idx - 1) >> 1;
+            parent = &heap_data[parent_idx];
 
         } while (idx);
     }
@@ -224,24 +238,17 @@ bheap *bheap_insert (bheap *h, const bheap_data *insert_data)
  */
 bheap_data bheap_pop (bheap *h)
 {
-    assert(!bheap_empty(h));
-
     /*
      * The head element is what we will return.
      */
-    bheap_data head = h->data[0];
+    bheap_data *heap_data = h->data;
+    bheap_data head = heap_data[0];
 
     /*
      * First, we remove the item in slot #1, which is now empty. Then we take 
      * the last item in the bheap, and move it up to slot #1.
      */
-    bheap_data temp = h->data[--h->in_use];
-    if (!h->in_use) {
-        return (head);
-    }
-
-    bheap_less_than_func less_than = h->less_than;
-    
+    bheap_data temp = heap_data[--h->in_use];
     bheap_idx idx = 0;
 
     for (;;) {
@@ -256,26 +263,26 @@ bheap_data bheap_pop (bheap *h)
          * If it has a lower score than both of its two children, it stays 
          * where it is. If not, we swap it with the lower of the two children.  
          */
-        child_idx = (idx * 2) + 1;
-        if (child_idx >= h->in_use) {
+        child_idx = (idx << 1) + 1;
+        if (unlikely(child_idx >= h->in_use)) {
             /*
              * If we are past the end of the bheap then it is ordered again.
              */
             break;
         }
 
-        other_child_idx = child_idx + 1;
-
-        const bheap_data *child = &h->data[child_idx];
+        const bheap_data *child = &heap_data[child_idx];
         const bheap_data *lowest_child;
 
         /*
          * Find the lowest of the two children if there are two children.
          */
-        if (other_child_idx < h->in_use) {
-            const bheap_data *other_child = &h->data[other_child_idx];
+        other_child_idx = child_idx + 1;
 
-            if ((less_than)(child, other_child)) {
+        if (likely(other_child_idx < h->in_use)) {
+            const bheap_data *other_child = child + 1;
+
+            if (bheap_compare_sort_keys(child, other_child)) {
                 lowest_child = child;
                 lowest_child_idx = child_idx;
             } else {
@@ -293,18 +300,18 @@ bheap_data bheap_pop (bheap *h)
         /*
          * If our value is lower than both children, then we are ordered.
          */
-        if ((less_than)(&temp, lowest_child)) {
+        if (unlikely(bheap_compare_sort_keys(&temp, lowest_child))) {
             break; 
         }
 
-        h->data[idx] = *lowest_child;
+        heap_data[idx] = *lowest_child;
         idx = lowest_child_idx;
     }
 
     /*
      * Re-insert the popped value now.
      */
-    h->data[idx] = temp;
+    heap_data[idx] = temp;
 
     return (head);
 }

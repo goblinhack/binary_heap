@@ -6,28 +6,28 @@
 #include <string.h>
 #include <assert.h>
 
+#define BHEAP_INCLUDE_PRINTER
+#define BHEAP_PRINT_RESULTS
+
 typedef unsigned int bheap_idx;
 
 typedef struct {
-    unsigned int sort_key;
-    unsigned int user_data;
-    unsigned char user_junk;
+    /*
+     * We save 50 ms on 2 million entries by using shorts!
+     */
+    unsigned short sort_key;
+    unsigned short user_data;
 } bheap_data;
-
-typedef unsigned int (*bheap_less_than_func)(const bheap_data *, 
-                                             const bheap_data *);
 
 typedef void (*bheap_print_func)(const bheap_data *);
 
 typedef struct bheap_ {
-    /*
-     * How to compare bheap elements.
-     */
-    bheap_less_than_func less_than;
+#ifdef BHEAP_INCLUDE_PRINTER
     /*
      * How to print elements.
      */
     bheap_print_func printer;
+#endif
     /*
      * Size of malloced array.
      */
@@ -43,7 +43,6 @@ typedef struct bheap_ {
 } bheap;
 
 bheap *bheap_malloc(const bheap_idx max_size,
-                    bheap_less_than_func less_than,
                     bheap_print_func printer);
 
 void bheap_free(bheap *h);
