@@ -7,6 +7,9 @@
 #include <assert.h>
 #include "binary_heap.h"
 
+/*
+ * Print a heap element.
+ */
 static void bheap_test_print (bheap *h)
 {
     bheap_idx idx;
