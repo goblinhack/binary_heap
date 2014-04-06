@@ -47,7 +47,7 @@ static unsigned int bheap_test_user_data = 42;
 /*
  * Fill the bheap with data.
  */
-static void bheap_test_fill (bheap *h, bheap_idx nelements)
+static bheap *bheap_test_fill (bheap *h, bheap_idx nelements)
 {
     bheap_data data;
 
@@ -58,7 +58,7 @@ static void bheap_test_fill (bheap *h, bheap_idx nelements)
         data.user_data = bheap_test_user_data + data.sort_key;
         data.user_junk = bheap_test_user_data;
 
-        bheap_insert(h, &data);
+        h = bheap_insert(h, &data);
 
         /*
          * Print the bheap.
@@ -67,6 +67,8 @@ static void bheap_test_fill (bheap *h, bheap_idx nelements)
         bheap_print_sort_key(&data);
         bheap_test_print(h);
     }
+
+    return (h);
 }
 
 /*
@@ -105,7 +107,7 @@ int main (int argc, char *argv[])
                     bheap_compare_sort_keys, 
                     bheap_print_sort_key);
 
-    bheap_test_fill(h, 20);
+    h = bheap_test_fill(h, 20);
 
     bheap_test_empty(h);
 

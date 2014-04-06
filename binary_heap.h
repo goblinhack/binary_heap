@@ -21,10 +21,6 @@ typedef void (*bheap_print_func)(const bheap_data *);
 
 typedef struct bheap_ {
     /*
-     * Contiguous array of data.
-     */
-    bheap_data *data;
-    /*
      * How to compare bheap elements.
      */
     bheap_less_than_func less_than;
@@ -40,6 +36,10 @@ typedef struct bheap_ {
      * Number of elements in use.
      */
     bheap_idx in_use;
+    /*
+     * Contiguous array of data.
+     */
+    bheap_data data[0];
 } bheap;
 
 bheap *bheap_malloc(const bheap_idx max_size,
@@ -48,7 +48,7 @@ bheap *bheap_malloc(const bheap_idx max_size,
 
 void bheap_free(bheap *h);
 
-unsigned int bheap_insert(bheap *h, const bheap_data *insert_data);
+bheap *bheap_insert(bheap *h, const bheap_data *insert_data);
 
 bheap_data bheap_pop(bheap *h);
 

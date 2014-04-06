@@ -95,18 +95,47 @@
 #include "binary_heap.h"
 
 /*
+ * GCC extension for offset
+ */
+#ifdef __GNUC__
+#if defined(__GNUC__) && __GNUC__ > 3
+#define STRUCT_OFFSET(STRUCT, MEMBER) __builtin_offsetof(STRUCT, MEMBER)
+#else
+#define STRUCT_OFFSET(STRUCT, MEMBER) \
+                     ((size_t) ( (char *)&((st *)0)->m - (char *)0 ))
+#endif
+#else
+#define STRUCT_OFFSET(STRUCT, MEMBER) \
+                     ((size_t) ( (char *)&((st *)0)->m - (char *)0 ))
+#endif
+
+/*
+ * How much contiguous memory to hold the heap struct and data elems.
+ */
+static size_t bheap_size (const bheap_idx max_size)
+{
+    /*
+     * Get the real sizes, taking into account padding of structs in memory.
+     */
+    size_t struct_size = STRUCT_OFFSET(bheap, data);
+    size_t elem_size = STRUCT_OFFSET(bheap, data[1]) -
+                       STRUCT_OFFSET(bheap, data[0]);
+
+    return (struct_size + (elem_size * max_size));
+}
+
+/*
  * Allocate contiguous heap memory for all elements.
  */
 bheap *bheap_malloc (const bheap_idx max_size,
                      bheap_less_than_func less_than,
                      bheap_print_func printer)
 {
-    bheap *h = malloc(sizeof(*h));
+    bheap *h = malloc(bheap_size(max_size));
     if (!h) {
         return (0);
     }
 
-    h->data = malloc(sizeof(bheap_data) * max_size);
     h->max_size = max_size;
     h->in_use = 0;
     h->less_than = less_than;
@@ -120,14 +149,13 @@ bheap *bheap_malloc (const bheap_idx max_size,
  */
 void bheap_free (bheap *h)
 {
-    free(h->data);
     free(h);
 }
 
 /*
  * Insert a new element in to the heap and sort it.
  */
-unsigned int bheap_insert (bheap *h, const bheap_data *insert_data)
+bheap *bheap_insert (bheap *h, const bheap_data *insert_data)
 {
     /*
      * Resize the bheap if needed.
@@ -135,13 +163,10 @@ unsigned int bheap_insert (bheap *h, const bheap_data *insert_data)
     if (h->in_use == h->max_size) {
         h->max_size += (h->max_size + 1) / 2;
 
-        bheap_data *new_data = 
-                        realloc(h->data, sizeof(bheap_data) * h->max_size);
-        if (!new_data) {
+        h = realloc(h, bheap_size(h->max_size));
+        if (!h) {
             return (0);
         }
-
-        h->data = new_data;
     }
 
     bheap_idx idx = h->in_use++;
@@ -195,7 +220,7 @@ unsigned int bheap_insert (bheap *h, const bheap_data *insert_data)
 
     *current = *insert_data;
 
-    return (1);
+    return (h);
 }
 
 /*
